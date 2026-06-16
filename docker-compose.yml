@@ -1,47 +1,50 @@
 version: '3.8'
-
 services:
-  # BASE DE DATOS
   postgres_db:
     image: postgres:15-alpine
     container_name: bebras_db
     restart: always
     environment:
-      # Estos 3 los define: MODELO BD Y REPOS
-      POSTGRES_USER: dev_user           
-      POSTGRES_PASSWORD: dev_password   
-      POSTGRES_DB: bebras_bolivia       
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: bebras_bolivia
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # SECCIÓN DE APLICACIÓN
   auth-service:
     build:
       context: .
-      # Define la ruta: MODELO BD Y REPOS
-      dockerfile: servicios/servicio-autenticacion/Dockerfile 
+      dockerfile: servicios/servicio-autenticacion/Dockerfile
     container_name: auth_svc
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - NODE_ENV=development            # ESTÁNDARES DE CODIFICACIÓN
-      
-      # 1. Los datos (user/pass) vienen de: MODELO BD Y REPOS
-      # 2. La seguridad de la conexión viene de: DDOS, TLS, INYECCION
+      - NODE_ENV=development
       - DB_URL=postgres://dev_user:dev_password@postgres_db:5432/bebras_bolivia
-      
-      # CERTIFICADOS Y FIRMAS DIGITALES
-
     ports:
       - "3001:3001"
     depends_on:
       - postgres_db
 
-# RECURSOS ADICIONALES
+  cliente:
+    build:
+      context: .
+      dockerfile: cliente/Dockerfile
+    container_name: bebras_frontend
+    volumes:
+      - ./cliente:/usr/src/app/cliente
+      - /usr/src/app/cliente/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://auth-service:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - postgres_db
+
 volumes:
   postgres_data:
-
-# REDIS

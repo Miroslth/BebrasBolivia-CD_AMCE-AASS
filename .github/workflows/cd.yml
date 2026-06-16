@@ -1,0 +1,24 @@
+name: CD - Deploy con Docker
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Runner a usar'
+        required: true
+        default: 'miroslava-pc'
+        type: choice
+        options:
+          - miroslava-pc
+          - abigail-pc
+jobs:
+  deploy:
+    runs-on: [self-hosted, "${{ github.event.inputs.runner_label || 'miroslava-pc' }}"]
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+      - name: Limpiar contenedores previos
+        run: docker compose down --remove-orphans
+      - name: Construir y levantar contenedores
+        run: docker compose up -d --build
