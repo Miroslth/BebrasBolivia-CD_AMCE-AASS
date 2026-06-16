@@ -13,19 +13,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  auth-service:
+  usuario-service:
     build:
       context: .
-      dockerfile: servicios/servicio-autenticacion/Dockerfile
-    container_name: auth_svc
+      dockerfile: servicios/servicio-usuario/Dockerfile
+    container_name: usuario_svc
     volumes:
-      - .:/usr/src/app
+      - ./servicios/servicio-usuario:/usr/src/app
       - /usr/src/app/node_modules
     environment:
       - NODE_ENV=development
-      - DB_URL=postgres://dev_user:dev_password@postgres_db:5432/bebras_bolivia
+      - DATABASE_URL=postgresql://dev_user:dev_password@postgres_db:5432/bebras_bolivia
     ports:
-      - "3001:3001"
+      - "4102:4102"
     depends_on:
       - postgres_db
 
@@ -39,11 +39,11 @@ services:
       - /usr/src/app/cliente/node_modules
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://auth-service:3001
+      - NEXT_PUBLIC_API_URL=http://usuario-service:4102
     ports:
       - "3000:3000"
     depends_on:
-      - auth-service
+      - usuario-service
       - postgres_db
 
 volumes:
